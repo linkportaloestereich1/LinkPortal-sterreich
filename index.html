@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LinkPortal Österreich</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    height: 100vh;
+    background: #f9fafb;
+    color: #222;
+  }
+  .sidebar {
+    width: 200px;
+    background-color: #004a99;
+    color: white;
+    padding-top: 20px;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    user-select: none;
+  }
+  .sidebar button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    text-align: left;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: background-color 0.3s, border-left 0.3s;
+    user-select: none;
+  }
+  .sidebar button:hover,
+  .sidebar button.active {
+    background-color: #003366;
+    border-left: 4px solid #88bbee;
+  }
+
+  .main-content {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background: white;
+  }
+
+  .search-bar {
+    margin-bottom: 20px;
+  }
+  .search-bar input[type="text"] {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1.1rem;
+    border: 2px solid #004a99;
+    border-radius: 6px;
+  }
+
+  .results h2 {
+    color: #004a99;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  .results h3 {
+    margin-bottom: 5px;
+    margin-top: 20px;
+  }
+
+  .links-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  .links-list li {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    background: #e7f0ff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  .links-list a {
+    color: #004a99;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1.2rem;
+  }
+  .links-list a:hover {
+    text-decoration: underline;
+  }
+
+  .no-results {
+    font-style: italic;
+    color: #666;
+  }
+
+  @media (max-width: 700px) {
+    body {
+      flex-direction: column;
+      height: auto;
+    }
+    .sidebar {
+      width: 100%;
+      flex-direction: row;
+      overflow-x: auto;
+    }
+    .sidebar button {
+      flex: 1 0 auto;
+      text-align: center;
+      border-left: none;
+      border-bottom: 4px solid transparent;
+    }
+    .sidebar button.active,
+    .sidebar button:hover {
+      border-left: none;
+      border-bottom: 4px solid #88bbee;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <nav class="sidebar" aria-label="Bundesländer">
+    <h2>Bundesländer</h2>
+  </nav>
+
+  <main class="main-content">
+    <div class="search-bar" style="display:none;">
+      <input type="text" id="category-search" placeholder="Kategorie suchen..." aria-label="Kategorie suchen" />
+    </div>
+    <div class="results" aria-live="polite" aria-atomic="true">
+      <!-- Ergebnisse hier -->
+    </div>
+  </main>
+
+<script>
+  // Bundesländer und Kategorien - keine Links hier, nur Struktur
+  const data = {
+    wien: { name: "Wien", kategorien: ["Schulen", "Freizeit & Kultur", "Tourismus"] },
+    noe: { name: "Niederösterreich", kategorien: ["Schulen", "Landwirtschaft", "Tourismus"] },
+    ooe: { name: "Oberösterreich", kategorien: ["Schulen", "Landwirtschaft", "Tourismus"] },
+    sbg: { name: "Salzburg", kategorien: ["Schulen", "Tourismus"] },
+    ktnt: { name: "Kärnten", kategorien: ["Schulen", "Tourismus"] },
+    stmk: { name: "Steiermark", kategorien: ["Schulen", "Tourismus"] },
+    t: { name: "Tirol", kategorien: ["Schulen", "Tourismus"] },
+    vbg: { name: "Vorarlberg", kategorien: ["Schulen", "Tourismus"] },
+    bgl: { name: "Burgenland", kategorien: ["Schulen", "Tourismus"] }
+  };
+
+  // **Hier sind alle Links, die du einfach bearbeiten kannst:**
+  // Füge neue Links hinzu oder ändere bestehende
+  // Jedes Objekt braucht: bundesland (key aus data), kategorie (genau so wie in data.kategorien), label (Name), url (Link)
+  const links = [
+    // Wien
+    { bundesland: "wien", kategorie: "Schulen", label: "BG/BRG Wien", url: "https://www.bgbrg.at" },
+    { bundesland: "wien", kategorie: "Schulen", label: "HTL Wien", url: "https://www.htlwien.at" },
+    { bundesland: "wien", kategorie: "Freizeit & Kultur", label: "Wiener Festwochen", url: "https://www.festwochen.at" },
+    { bundesland: "wien", kategorie: "Freizeit & Kultur", label: "Prater Wien", url: "https://www.prater.at" },
+    { bundesland: "wien", kategorie: "Tourismus", label: "Wien Tourismus", url: "https://www.wien.info" },
+
+    // Niederösterreich
+    { bundesland: "noe", kategorie: "Schulen", label: "BORG St. Pölten", url: "https://www.borg-stpoelten.at" },
+    { bundesland: "noe", kategorie: "Landwirtschaft", label: "AMA Niederösterreich", url: "https://www.ama.at/noe" },
+    { bundesland: "noe", kategorie: "Tourismus", label: "Niederösterreich Werbung", url: "https://www.noe.gv.at" },
+
+    // Oberösterreich
+    { bundesland: "ooe", kategorie: "Schulen", label: "HLW Linz", url: "https://www.hlw-linz.at" },
+    { bundesland: "ooe", kategorie: "Landwirtschaft", label: "AMA Oberösterreich", url: "https://www.ama.at/ooe" },
+    { bundesland: "ooe", kategorie: "Tourismus", label: "Oberösterreich Tourismus", url: "https://www.ooe-tourismus.at" },
+
+    // Salzburg
+    { bundesland: "sbg", kategorie: "Schulen", label: "BS Salzburg", url: "https://www.bbsalzburg.at" },
+    { bundesland: "sbg", kategorie: "Tourismus", label: "Salzburg Tourismus", url: "https://www.salzburg.info" },
+
+    // Kärnten
+    { bundesland: "ktnt", kategorie: "Schulen", label: "HLW Kärnten", url: "https://www.hlw-kaernten.at" },
+    { bundesland: "ktnt", kategorie: "Tourismus", label: "Kärnten Werbung", url: "https://www.kaernten.at" },
+
+    // Steiermark
+    { bundesland: "stmk", kategorie: "Schulen", label: "BG Graz", url: "https://www.bggraz.at" },
+    { bundesland: "stmk", kategorie: "Tourismus", label: "Steiermark Tourismus", url: "https://www.steiermark.com" },
+
+    // Tirol
+    { bundesland: "t", kategorie: "Schulen", label: "BORG Innsbruck", url: "https://www.borg-innsbruck.at" },
+    { bundesland: "t", kategorie: "Tourismus", label: "Tirol Werbung", url: "https://www.tirol.at" },
+
+    // Vorarlberg
+    { bundesland: "vbg", kategorie: "Schulen", label: "BORG Bregenz", url: "https://www.bregenz.at" },
+    { bundesland: "vbg", kategorie: "Tourismus", label: "Vorarlberg Tourismus", url: "https://www.vorarlberg.travel" },
+
+    // Burgenland
+    { bundesland: "bgl", kategorie: "Schulen", label: "BG Oberpullendorf", url: "https://www.bg-op.at" },
+    { bundesland: "bgl", kategorie: "Tourismus", label: "Burgenland Tourismus", url: "https://www.burgenland.info" }
+  ];
+
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main-content');
+  const searchBar = mainContent.querySelector('.search-bar');
+  const categorySearchInput = document.getElementById('category-search');
+  const resultsDiv = mainContent.querySelector('.results');
+
+  let selectedBundesland = null;
+
+  // Bundesländer Buttons erzeugen
+  function renderBundeslaender() {
+    Object.entries(data).forEach(([key, bl]) => {
+      const btn = document.createElement('button');
+      btn.textContent = bl.name;
+      btn.setAttribute('aria-pressed', 'false');
+      btn.onclick = () => {
+        selectedBundesland = key;
+        highlightActive(sidebar, btn);
+        searchBar.style.display = "block";
+        categorySearchInput.value = '';
+        resultsDiv.innerHTML = `<h2>${bl.name}</h2><p>Bitte suche eine Kategorie oben.</p>`;
+        categorySearchInput.focus();
+      };
+      sidebar.appendChild(btn);
+    });
+  }
+
+  // Suche und Ergebnisanzeige
+  function searchCategories(query) {
+    if (!selectedBundesland) return;
+
+    const blData = data[selectedBundesland];
+    const queryLower = query.toLowerCase();
+
+    // Filtere Kategorien die im Bundesland sind und mit Suchbegriff matchen
+    const matchingCategories = blData.kategorien.filter(catName =>
+      catName.toLowerCase().includes(queryLower)
+    );
+
+    if (matchingCategories.length === 0) {
+      resultsDiv.innerHTML = `<h2>${blData.name}</h2><p class="no-results">Keine Kategorie gefunden.</p>`;
+      return;
+    }
+
+    // Zeige Links für die passenden Kategorien im Bundesland
+    let html = `<h2>${blData.name} - Suchergebnisse für "${query}"</h2>`;
+
+    matchingCategories.forEach(catName => {
+      // Links filtern: genaues Bundesland + Kategorie
+      const filteredLinks = links.filter(link =>
+        link.bundesland === selectedBundesland &&
+        link.kategorie.toLowerCase() === catName.toLowerCase()
+      );
+
+      if (filteredLinks.length > 0) {
+        html += `<h3>${catName}</h3><ul class="links-list">`;
+        filteredLinks.forEach(link => {
+          html += `<li><a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.label}</a></li>`;
+        });
+        html += `</ul>`;
+      }
+    });
+
+    resultsDiv.innerHTML = html;
+  }
+
+  // Aktiven Button hervorheben
+  function highlightActive(container, activeBtn) {
+    [...container.querySelectorAll('button')].forEach(btn => {
+      btn.classList.toggle('active', btn === activeBtn);
+      btn.setAttribute('aria-pressed', btn === activeBtn ? 'true' : 'false');
+    });
+  }
+
+  // Eventlistener Suche
+  categorySearchInput.addEventListener('input', e => {
+    searchCategories(e.target.value.trim());
+  });
+
+  // Initial Bundesländer rendern
+  renderBundeslaender();
+</script>
+
+</body>
+</html>
